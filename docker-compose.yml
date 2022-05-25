@@ -13,8 +13,8 @@ services:
       - "25672:5672"
     environment:
       RABBITMQ_DEFAULT_USER: rabbitmq
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_USER}
-      RABBITMQ_DEFAULT_VHOST: ${PROJECT_NAME}
+      RABBITMQ_DEFAULT_PASS: rabbitmq
+      RABBITMQ_DEFAULT_VHOST: rabbitmq
     volumes:
       - rabbitmq_volume:/var/lib/rabbitmq/mnesia/rabbit@my-rabbit
     labels:
@@ -80,4 +80,3 @@ networks:
     name: service
   traefik:
     name: traefik
-    external: true
