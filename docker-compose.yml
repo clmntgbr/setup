@@ -3,7 +3,7 @@ version: '3.5'
 services:
   rabbitmq:
     restart: unless-stopped
-    container_name: rabbitmq
+    container_name: rabbitmq_setup
     image: rabbitmq:3-management
     hostname: rabbitmq
     networks:
@@ -26,7 +26,7 @@ services:
 
   maildev:
     restart: unless-stopped
-    container_name: maildev
+    container_name: maildev_setup
     image: maildev/maildev
     command: bin/maildev --web 80 --smtp 25 --hide-extensions STARTTLS
     networks:
@@ -41,7 +41,7 @@ services:
 
   traefik:
     image: traefik:2.4
-    container_name: traefik
+    container_name: traefik_setup
     restart: unless-stopped
     depends_on:
       - reverse-proxy-https-helper
@@ -60,7 +60,7 @@ services:
       - "traefik.http.routers.traefik=true"
 
   reverse-proxy-https-helper:
-    container_name: reverse_proxy
+    container_name: reverse_proxy_setup
     image: alpine
     command: sh -c "cd /etc/ssl/traefik
       && wget traefik.me/cert.pem -O cert.pem

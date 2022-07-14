@@ -33,3 +33,5 @@ start:
 ## Stop containers
 stop:
 	@$(DOCKER_COMPOSE) down
+
+restart: stop start
