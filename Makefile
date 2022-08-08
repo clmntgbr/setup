@@ -29,9 +29,9 @@ build:
 ## Start containers
 start:
 	@$(DOCKER_COMPOSE) up -d
-	@echo "maildev is available here: https://maildev.docker.localhost/"
-	@echo "traefik is available here: https://traefik.docker.localhost/"
-	@echo "rabbitmq is available here: https://rabbitmq.docker.localhost/"
+	@echo "maildev is available here: https://maildev.traefik.me"
+	@echo "traefik is available here: https://traefik.traefik.me"
+	@echo "rabbitmq is available here: https://rabbitmq.traefik.me"
 
 ## Stop containers
 stop:

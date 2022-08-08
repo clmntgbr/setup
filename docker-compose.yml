@@ -20,7 +20,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
-      - "traefik.http.routers.rabbitmq.rule=Host(`rabbitmq.docker.localhost`)"
+      - "traefik.http.routers.rabbitmq.rule=Host(`rabbitmq.traefik.me`)"
       - "traefik.http.routers.rabbitmq.tls=true"
       - "traefik.http.services.rabbitmq.loadbalancer.server.port=15672"
 
@@ -35,24 +35,22 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
-      - "traefik.http.routers.maildev.rule=Host(`maildev.docker.localhost`)"
+      - "traefik.http.routers.maildev.rule=Host(`maildev.traefik.me`)"
       - "traefik.http.routers.maildev.tls=true"
       - "traefik.http.services.maildev.loadbalancer.server.port=80"
 
   traefik:
-    image: traefik:2.4
+    image: traefik:2.8.1
     container_name: traefik_setup
     restart: unless-stopped
-    depends_on:
-      - reverse-proxy-https-helper
     ports:
       - 80:80
       - 443:443
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/run/docker.sock:/var/run/docker.sock
       - ./.deployment/docker/containers/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
       - ./.deployment/docker/containers/traefik/config.yml:/etc/traefik/config.yml:ro
-      - certs:/etc/ssl/traefik:ro
+      - certs:/etc/ssl/traefik
     networks:
       - traefik
     labels:
