@@ -40,7 +40,7 @@ services:
       - "traefik.http.services.maildev.loadbalancer.server.port=80"
 
   traefik:
-    image: traefik:2.8.1
+    image: traefik:latest
     container_name: setup_traefik
     restart: unless-stopped
     ports:
@@ -60,9 +60,7 @@ services:
   reverse-proxy-https-helper:
     container_name: setup_reverse_proxy
     image: alpine
-    command: sh -c "cd /etc/ssl/traefik
-      && wget traefik.me/cert.pem -O cert.pem
-      && wget traefik.me/privkey.pem -O privkey.pem"
+    command: sh -c "cd /etc/ssl/traefik && wget traefik.me/cert.pem -O cert.pem && wget traefik.me/privkey.pem -O privkey.pem"
     volumes:
       - certs:/etc/ssl/traefik
     networks:
