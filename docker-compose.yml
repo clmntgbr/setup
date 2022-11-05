@@ -67,9 +67,66 @@ services:
       - traefik
       - service
 
+  glitchtip_web:
+    container_name: setup_glitchtip_web
+    image: glitchtip/glitchtip
+    depends_on:
+      - glitchtip_postgres
+      - glitchtip_redis
+    ports:
+      - "8989:8989"
+    restart: unless-stopped
+    env_file:
+      - .env
+    networks:
+      - traefik
+      - service
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.glitchtip.rule=Host(`glitchtip.traefik.me`)"
+      - "traefik.http.routers.glitchtip.tls=true"
+      - "traefik.http.services.glitchtip.loadbalancer.server.port=8989"
+
+  glitchtip_worker:
+    container_name: setup_glitchtip_worker
+    image: glitchtip/glitchtip
+    command: ./bin/run-celery-with-beat.sh
+    env_file:
+      - .env
+    depends_on:
+      - glitchtip_postgres
+      - glitchtip_redis
+    restart: unless-stopped
+
+  glitchtip_postgres:
+    container_name: setup_glitchtip_postgres
+    image: postgres:15
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: "trust"
+    restart: unless-stopped
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+
+  glitchtip_redis:
+    container_name: setup_glitchtip_redis
+    image: redis
+    restart: unless-stopped
+
+  glitchtip_migrate:
+    container_name: setup_glitchtip_migrate
+    image: glitchtip/glitchtip
+    env_file:
+      - .env
+    depends_on:
+      - glitchtip_postgres
+      - glitchtip_redis
+    command: "./manage.py migrate"
+
 volumes:
   rabbitmq_volume: {}
   certs: {}
+  pg-data: {}
 
 networks:
   service:
