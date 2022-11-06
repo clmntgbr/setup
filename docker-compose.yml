@@ -1,11 +1,5 @@
 version: '3.5'
 
-x-logging:
-  &default-logging
-  driver: "json-file"
-  options:
-    max-size: "1m"
-
 services:
   rabbitmq:
     restart: unless-stopped
@@ -73,123 +67,9 @@ services:
       - traefik
       - service
 
-  glitchtip-postgres:
-    image: postgres:15
-    container_name: setup_glitchtip_postgres
-    restart: unless-stopped
-    volumes:
-      - glitchtip:/var/lib/postgresql/data
-    environment:
-      POSTGRES_HOST_AUTH_METHOD: "trust"
-      POSTGRES_DB: postgres
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      PGDATA: /var/lib/postgresql/data/pgdata
-    networks:
-      - traefik
-      - service
-    healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "postgres" ]
-      interval: 5s
-      retries: 5
-    logging: *default-logging
-
-  glitchtip-redis:
-    image: redis
-    container_name: setup_glitchtip_redis
-    restart: unless-stopped
-    networks:
-      - traefik
-      - service
-    healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
-      interval: 5s
-      timeout: 30s
-      retries: 50
-    logging: *default-logging
-
-  glitchtip-web:
-    image: glitchtip/glitchtip
-    container_name: setup_glitchtip
-    restart: unless-stopped
-    depends_on:
-      traefik:
-        condition: service_started
-      glitchtip-postgres:
-        condition: service_healthy
-      glitchtip-redis:
-        condition: service_healthy
-    environment:
-      DATABASE_URL: postgres://postgres:postgres@glitchtip-postgres:5432/postgres
-      REDIS_URL: redis://glitchtip-redis:6379/0
-      SECRET_KEY: jsdf93892309fhufhr
-      PORT: 8000
-      EMAIL_URL: ${EMAIL_URL}
-      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL}
-      GLITCHTIP_DOMAIN: ${GLITCHTIP_DOMAIN}
-      ENABLE_OPEN_USER_REGISTRATION: "False"
-      GLITCHTIP_MAX_EVENT_LIFE_DAYS: 90
-    networks:
-      - traefik
-      - service
-    labels:
-      - 'traefik.enable=true'
-      - 'traefik.http.routers.glitchtip.rule=Host(`glitchtip.traefik.me`)'
-      - 'traefik.http.routers.glitchtip.entrypoints=https'
-      - 'traefik.http.routers.glitchtip.tls=true'
-      - 'traefik.http.services.glitchtip-service.loadbalancer.server.port=8000'
-    logging: *default-logging
-
-  glitchtip-worker:
-    image: glitchtip/glitchtip
-    container_name: setup_glitchtip_worker
-    restart: unless-stopped
-    command: celery -A glitchtip worker -B -l INFO
-    depends_on:
-      glitchtip-postgres:
-        condition: service_healthy
-      glitchtip-redis:
-        condition: service_healthy
-    environment:
-      DATABASE_URL: postgres://postgres:postgres@glitchtip-postgres:5432/postgres
-      REDIS_URL: redis://glitchtip-redis:6379/0
-      SECRET_KEY: jsdf93892309fhufhr
-      PORT: 8000
-      EMAIL_URL: ${EMAIL_URL}
-      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL}
-      GLITCHTIP_DOMAIN: ${GLITCHTIP_DOMAIN}
-    networks:
-      - traefik
-      - service
-    logging: *default-logging
-
-  glitchtip-migrate:
-    image: glitchtip/glitchtip
-    container_name: setup_glitchtip_migrate
-    depends_on:
-      glitchtip-postgres:
-        condition: service_healthy
-      glitchtip-redis:
-        condition: service_healthy
-    command: "./manage.py migrate"
-    environment:
-      DATABASE_URL: postgres://postgres:postgres@glitchtip-postgres:5432/postgres
-      REDIS_URL: redis://glitchtip-redis:6379/0
-      SECRET_KEY: jsdf93892309fhufhr
-      PORT: 8000
-      EMAIL_URL: ${EMAIL_URL}
-      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL}
-      GLITCHTIP_DOMAIN: ${GLITCHTIP_DOMAIN}
-    networks:
-      - traefik
-      - service
-    logging: *default-logging
-
 volumes:
   rabbitmq_volume: {}
   certs: {}
-  glitchtip:
-
 
 networks:
   service:
