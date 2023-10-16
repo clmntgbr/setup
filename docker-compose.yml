@@ -7,26 +7,64 @@ services:
     image: rabbitmq:3-management
     hostname: rabbitmq
     networks:
+      - traefik
       - service
     ports:
-      - 25673:5672
-      - 15673:15672
+      - "25672:5672"
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
       RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST}
     volumes:
       - rabbitmq_volume:/var/lib/rabbitmq/mnesia/rabbit@my-rabbit
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.rabbitmq.rule=Host(`rabbitmq.traefik.me`)"
+      - "traefik.http.routers.rabbitmq.tls=true"
+      - "traefik.http.services.rabbitmq.loadbalancer.server.port=15672"
 
   maildev:
     restart: unless-stopped
     container_name: setup_maildev
     image: maildev/maildev
-    ports:
-      - 1080:80
-      - 1025:25
     command: bin/maildev --web 80 --smtp 25 --hide-extensions STARTTLS
     networks:
+      - traefik
+      - service
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.maildev.rule=Host(`maildev.traefik.me`)"
+      - "traefik.http.routers.maildev.tls=true"
+      - "traefik.http.services.maildev.loadbalancer.server.port=80"
+
+  traefik:
+    image: traefik:latest
+    container_name: setup_traefik
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./.deployment/docker/containers/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./.deployment/docker/containers/traefik/config.yml:/etc/traefik/config.yml:ro
+      - certs:/etc/ssl/traefik
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik=true"
+
+  reverse-proxy-https-helper:
+    container_name: setup_reverse_proxy
+    image: alpine
+    command: sh -c "cd /etc/ssl/traefik && wget traefik.me/cert.pem -O cert.pem && wget traefik.me/privkey.pem -O privkey.pem"
+    volumes:
+      - certs:/etc/ssl/traefik
+    networks:
+      - traefik
       - service
 
 volumes:
@@ -36,3 +74,5 @@ volumes:
 networks:
   service:
     name: service
+  traefik:
+    name: traefik

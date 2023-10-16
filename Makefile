@@ -29,8 +29,9 @@ build:
 ## Start containers
 start:
 	@$(DOCKER_COMPOSE) up -d
-	@echo "rabbitmq is available here: http://localhost:15673"
-	@echo "maildev is available here: http://localhost:1080"
+	@echo "traefik is available here: https://traefik.traefik.me"
+	@echo "maildev is available here: https://maildev.traefik.me"
+	@echo "rabbitmq is available here: https://rabbitmq.traefik.me"
 
 ## Stop containers
 stop:
